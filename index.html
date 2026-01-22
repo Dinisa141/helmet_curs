@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детекция касок на стройке</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 60px 20px;
+            margin: 30px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            background: #e8f4fc;
+            border-color: #2980b9;
+        }
+
+        .upload-area i {
+            font-size: 4em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .upload-area h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            color: #7f8c8d;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .result-section {
+            padding: 40px;
+            display: none;
+        }
+
+        .result-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .image-container {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .image-container img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stats-container {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .stats-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .stat-item {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .helmet {
+            color: #27ae60;
+        }
+
+        .no-helmet {
+            color: #e74c3c;
+        }
+
+        .total {
+            color: #3498db;
+        }
+
+        .percentage {
+            font-size: 3em !important;
+            color: #9b59b6;
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .alert-success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+
+        .alert-warning {
+            background: #fdebd0;
+            color: #f39c12;
+            border: 2px solid #f39c12;
+        }
+
+        .alert-danger {
+            background: #fadbd8;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .result-container {
+                flex-direction: column;
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-hard-hat"></i> Детекция касок</h1>
+            <p>Загрузите фото стройплощадки для проверки наличия касок у работников</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Перетащите или кликните для загрузки фото</h3>
+                <p>Поддерживаемые форматы: JPG, PNG, WEBP (макс. 10MB)</p>
+                <button class="btn">Выбрать файл</button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+            <p style="margin-top: 20px; color: #7f8c8d;">
+                <i class="fas fa-info-circle"></i> Система определяет людей на фото и проверяет наличие защитных касок
+            </p>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>Анализирую изображение...</h3>
+            <p>Идет детекция людей и проверка касок</p>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">
+                <i class="fas fa-chart-bar"></i> Результаты анализа
+            </h2>
+            
+            <div class="result-container">
+                <div class="image-container">
+                    <h3><i class="fas fa-image"></i> Обработанное изображение</h3>
+                    <img id="resultImage" src="" alt="Результат">
+                </div>
+                
+                <div class="stats-container">
+                    <h3><i class="fas fa-chart-pie"></i> Статистика</h3>
+                    <div class="stats-box">
+                        <div class="stat-item">
+                            <div class="stat-label">👑 В касках</div>
+                            <div class="stat-value helmet" id="helmetCount">0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">👤 Без касок</div>
+                            <div class="stat-value no-helmet" id="noHelmetCount">0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">👥 Всего людей</div>
+                            <div class="stat-value total" id="totalPeople">0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">📊 В касках</div>
+                            <div class="stat-value percentage" id="percentage">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert" id="alertBox">
+                        <!-- Сообщение о безопасности будет здесь -->
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn" onclick="resetApp()">
+                    <i class="fas fa-redo"></i> Проверить другое фото
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Система детекции защитных касок | Powered by YOLOv8 & FastAPI</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <i class="fas fa-shield-alt"></i> Безопасность на первом месте
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000'; // Адрес вашего бэкенда
+        
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const resultSection = document.getElementById('resultSection');
+        const loading = document.getElementById('loading');
+        const resultImage = document.getElementById('resultImage');
+        const helmetCount = document.getElementById('helmetCount');
+        const noHelmetCount = document.getElementById('noHelmetCount');
+        const totalPeople = document.getElementById('totalPeople');
+        const percentage = document.getElementById('percentage');
+        const alertBox = document.getElementById('alertBox');
+        const uploadArea = document.getElementById('uploadArea');
+
+        // Обработка выбора файла
+        fileInput.addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                await handleFileUpload(file);
+            }
+        });
+
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2980b9';
+            uploadArea.style.background = '#e8f4fc';
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.background = '#f8f9fa';
+        });
+
+        uploadArea.addEventListener('drop', async function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.background = '#f8f9fa';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                await handleFileUpload(file);
+            } else {
+                alert('Пожалуйста, загрузите файл изображения');
+            }
+        });
+
+        // Основная функция загрузки
+        async function handleFileUpload(file) {
+            // Проверка размера (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимальный размер: 10MB');
+                return;
+            }
+
+            // Показываем загрузку
+            uploadSection.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                // 1. Отправляем на анализ (получаем JSON)
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_URL}/predict/`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка сервера: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // 2. Получаем обработанное изображение
+                const formData2 = new FormData();
+                formData2.append('file', file);
+
+                const imageResponse = await fetch(`${API_URL}/predict_image/`, {
+                    method: 'POST',
+                    body: formData2
+                });
+
+                if (imageResponse.ok) {
+                    const imageBlob = await imageResponse.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    resultImage.src = imageUrl;
+                }
+
+                // 3. Обновляем статистику
+                updateStatistics(result);
+
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при анализе изображения. Попробуйте снова.');
+                resetApp();
+            }
+        }
+
+        // Обновление статистики
+        function updateStatistics(result) {
+            // Скрываем загрузку, показываем результаты
+            loading.style.display = 'none';
+            resultSection.style.display = 'block';
+
+            // Обновляем цифры
+            helmetCount.textContent = result.helmet_count;
+            noHelmetCount.textContent = result.no_helmet_count;
+            totalPeople.textContent = result.total_people;
+            percentage.textContent = `${result.with_helmet_percentage}%`;
+
+            // Показываем сообщение о безопасности
+            let alertClass, alertMessage;
+
+            if (result.total_people === 0) {
+                alertClass = 'alert-warning';
+                alertMessage = '⚠️ Люди не обнаружены на изображении';
+            } else if (result.all_with_helmets) {
+                alertClass = 'alert-success';
+                alertMessage = '✅ Отлично! Все работники в защитных касках!';
+            } else if (result.with_helmet_percentage >= 80) {
+                alertClass = 'alert-success';
+                alertMessage = '👍 Хорошо! Большинство работников в касках';
+            } else if (result.with_helmet_percentage >= 50) {
+                alertClass = 'alert-warning';
+                alertMessage = '⚠️ Внимание! Только половина работников в касках';
+            } else if (result.with_helmet_percentage > 0) {
+                alertClass = 'alert-warning';
+                alertMessage = '🚨 Опасно! Меньше половины работников в касках!';
+            } else {
+                alertClass = 'alert-danger';
+                alertMessage = '🚨 КРИТИЧЕСКИ! Никто не в касках! Немедленно остановить работы!';
+            }
+
+            alertBox.className = `alert ${alertClass}`;
+            alertBox.innerHTML = `
+                <i class="fas ${alertClass.includes('success') ? 'fa-check-circle' : 
+                               alertClass.includes('warning') ? 'fa-exclamation-triangle' : 
+                               'fa-skull-crossbones'}"></i>
+                ${alertMessage}
+            `;
+        }
+
+        // Сброс приложения
+        function resetApp() {
+            fileInput.value = '';
+            resultImage.src = '';
+            resultSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
